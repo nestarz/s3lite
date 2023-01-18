@@ -9,7 +9,7 @@ const sql = await fetch(
 export default async (
   get_: () => Promise<ArrayBuffer | void>,
   set: (buffer: ArrayBuffer) => boolean | Promise<boolean>,
-  invalidated?: () => boolean | Promise<boolean>
+  ok?: () => boolean | Promise<boolean>
 ) => {
   const get = async () => {
     const buffer = await get_();
@@ -20,7 +20,7 @@ export default async (
   return {
     _db: db,
     query: async (query, ...props) => {
-      db = check ? ((await invalidated()) ? await get() : db) : await get();
+      db = ok ? ((await ok()) ? db : await get()) : await get();
       return db.exec(query, ...props).then(async (res) => {
         if (query.match(/DELETE|INSERT|UPDATE|CREATE/gi))
           await set(db.export());
