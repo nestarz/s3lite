@@ -8,24 +8,30 @@ const sql = await fetch(
 
 export default async (
   get_: () => Promise<ArrayBuffer | void>,
-  set: (buffer: ArrayBuffer) => boolean | Promise<boolean>,
-  ok?: () => boolean | Promise<boolean>
+  set: (buffer: Uint8Array) => boolean | Promise<boolean>,
+  gethash?: () => string | Promise<string>
 ) => {
   const get = async () => {
     const buffer = await get_();
     return new sql.Database(buffer ? new Uint8Array(buffer) : undefined);
   };
 
-  let db;
+  let db = await get();
+  let hash: undefined | string = undefined;
   return {
     _db: db,
     query: async (query, ...props) => {
-      db = ok ? ((await ok()) ? db : await get()) : await get();
-      return db.exec(query, ...props).then(async (res) => {
-        if (query.match(/DELETE|INSERT|UPDATE|CREATE/gi))
-          await set(db.export());
-        return res;
-      });
+      const newhash = await gethash?.();
+      if (newhash !== hash || !newhash) db = await get();
+      hash = newhash;
+      return Promise.resolve()
+        .then(() => db.exec(query, ...props))
+        .catch((error) => ({ error }))
+        .then(async (res) => {
+          if (query.match(/DELETE|INSERT|UPDATE|CREATE/gi))
+            await set(db.export());
+          return res;
+        });
     },
   };
 };
