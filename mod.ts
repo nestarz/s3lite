@@ -30,11 +30,13 @@ export default async (
         .then(async (res) => {
           if (query.match(/DELETE|INSERT|UPDATE|CREATE/gi))
             await set(db.export());
-          return (res?.[0]?.values ?? []).map((value) =>
-            Object.fromEntries(
-              value.map((value, i) => [res[0].columns[i], value])
-            )
-          );
+          return res?.error
+            ? res
+            : (res?.[0]?.values ?? []).map((value) =>
+                Object.fromEntries(
+                  value.map((value, i) => [res[0].columns[i], value])
+                )
+              );
         });
     },
   };
