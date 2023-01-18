@@ -16,8 +16,8 @@ export default async (
     return new sql.Database(buffer ? new Uint8Array(buffer) : undefined);
   };
 
+  let hash: undefined | string = await gethash?.();
   let db = await get();
-  let hash: undefined | string = undefined;
   return {
     _db: db,
     query: async (query, ...props) => {
